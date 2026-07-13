@@ -1,0 +1,6 @@
+x86-64 Linux ptrace-based memory scanner: parses /proc/<pid>/maps, attaches via PTRACE_ATTACH, performs AOB pattern matching with ?? wildcards using PEEKDATA, and generates pointer maps to target regions.
+
+HOW TO USE THE CODE
+
+sudo ./memory_scanner 12345 aob "DE AD BE EF ?? 11 22"
+sudo ./memory_scanner 12345 pointer 0x7f8abc000000
