@@ -4,3 +4,28 @@ HOW TO USE THE CODE
 
 sudo ./memory_scanner 12345 aob "DE AD BE EF ?? 11 22"
 sudo ./memory_scanner 12345 pointer 0x7f8abc000000
+
+PEEKDATA mechanics explaination
+
+PTRACE_PEEKDATA mechanics (Linux x86-64):
+ptrace(PTRACE_PEEKDATA, pid, addr, NULL) is a ptrace(2) request that reads a machine word (8 bytes on x86-64) from the tracee's virtual memory at addr.
+Kernel-side flow:
+Tracee attachment — Requires prior PTRACE_ATTACH + wait4().
+Address validation — Kernel checks addr is a valid userspace mapping in the tracee's mm.
+Page table walk — Translates addr → physical page via tracee's mm->pgd.
+Copy — Uses copy_from_user() (or direct access in same mm context) to fetch the 64-bit word into a kernel buffer.
+Return — Value returned directly in rax of the tracer's syscall (no data param used for PEEK).
+
+In the code I wrote;
+
+mov rax, 101          ; __NR_ptrace
+mov rdi, 2            ; PTRACE_PEEKDATA
+mov rsi, [pid]
+mov rdx, rbx          ; target virtual address
+xor r10, r10
+syscall
+; rax now contains *(uint64_t*)addr from target process
+
+This is the core primitive enabling external memory inspection without injecting code.
+
+
